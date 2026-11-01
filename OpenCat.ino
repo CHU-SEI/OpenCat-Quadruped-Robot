@@ -1,3 +1,11 @@
+// #include <MPU6050.h>
+// #include <MPU6050_6Axis_MotionApps20.h>
+// #include <MPU6050_6Axis_MotionApps612.h>
+// #include <MPU6050_9Axis_MotionApps41.h>
+// #include <helper_3dmath.h>
+
+// #include <I2Cdev.h>
+
 /*
    The driver for OpenCat, runs on ATmega328P-based NyBoard (as Arduino Uno).
    Compatible with Petoi Nybble, Bittle, and many other 8 or 12 DoF quadruped robots.
@@ -48,9 +56,9 @@
 
 // #define NyBoard_V0_1
 // #define NyBoard_V0_2
-// #define NyBoard_V1_0
+#define NyBoard_V1_0
 // #define NyBoard_V1_1
-#define NyBoard_V1_2
+// #define NyBoard_V1_2
 
 // you can also activate the following modes (they will disable the gyro to save programming space)
 // allowed combinations: RANDOM_MIND + ULTRASONIC, RANDOM_MIND, ULTRASONIC, VOICE, CAMERA
@@ -79,6 +87,7 @@
 // #define GROVE_SERIAL_PASS_THROUGH  //allow analog/digital read/write GPIO pins through serial protocol
 // #define OTHER_MODULES  //uncomment this line to disable the gyroscope code to save programming resources for other modules.
 // #define ROBOT_ARM
+#define DIRECT_LISTED_BIN  //'L' writes all 16 joint targets at once, without interpolation. Comment out to restore the original smooth motion.
 
 #define IR_PIN 4  // Signal Pin of IR receiver to Arduino Digital Pin 4
 #include "src/OpenCat.h"

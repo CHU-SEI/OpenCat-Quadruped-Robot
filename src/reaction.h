@@ -435,7 +435,11 @@ void reaction() {
         {
           // PTL(token);                                      //make real-time motion instructions more timely
           //list of all 16 joint: angle0, angle2,... angle15 (binary encoding)
+#ifdef DIRECT_LISTED_BIN
+          transform((int8_t *)newCmd, 1, 0);  //speedRatio 0: write the target at once, no interpolation (for streaming joint targets from a PC)
+#else
           transform((int8_t *)newCmd, 1, transformSpeed);  //need to add angleDataRatio if the angles are large
+#endif
           break;
         }
       case T_BEEP_BIN:

@@ -26,3 +26,4 @@ pyUI/README_Windows.txt
 serialMaster/logfile.log
 .cursor/*
 /PythonRobotCourse
+.claude/
