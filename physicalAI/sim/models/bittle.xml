@@ -1,0 +1,108 @@
+<!--
+Bittle (NyBoard V1.0) for MuJoCo / MJX.
+
+Joint convention: q (rad) = firmware angle (deg) * pi/180 for joints 8..15, same value for all four legs.
+  Read from photos of kcalib and kbalance, and Petoi's rotationDirections.jpeg:
+  - kcalib (all angles 0): thigh hangs straight down, shank points forward and lies flat on the floor.
+  - positive angle swings the thigh back, and the shank (knee) the same way: kbalance = +30 / +30 on all four legs.
+  The firmware already flips the sign per side (rotationDirection), so the same q works on both sides.
+  All hinge axes are -x so a positive q swings backward. Forward is +y, up is +z.
+
+Checked on the robot (physicalAI/joint_check.py): firmware index -> leg is 8 left front, 9 right front,
+  10 right back, 11 left back shoulder, and 12..15 the knees in the same order (left/right as seen from the robot).
+
+ASSUMED, not checked on the robot:
+  - servo torque (forcerange), stiffness kp, damping kv: placeholders until fitted from step responses.
+  - mass split torso / thigh / shank, and torso box size.
+Leg lengths (hip axis to knee axis 46.6 mm, knee axis to foot ball 51.5 mm + 5 mm radius) were confirmed by the owner.
+Joint limits are the firmware angleLimit values.
+-->
+<mujoco model="bittle">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" integrator="implicitfast" iterations="50" solver="Newton" cone="pyramidal"/>
+
+  <default>
+    <joint axis="-1 0 0" damping="0.002" armature="0.0005" frictionloss="0.001"/>
+    <position kp="0.5" kv="0.01" forcerange="-0.2 0.2"/>
+    <geom friction="1 0.01 0.001" condim="4"/>
+  </default>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="1 1 .1" friction="1 0.01 0.001"/>
+
+    <body name="torso" pos="0 0 0.06">
+      <freejoint name="root"/>
+      <geom name="torso" type="box" pos="0 0 -0.004" size="0.045 0.0635 0.014" mass="0.186"/>
+      <site name="imu" pos="0 0 0"/>
+
+      <!-- hip axes at z=0 of the torso; thigh hangs down (-z), shank points forward (+y) at q=0 -->
+      <body name="lfs" pos="-0.0485 0.0505 0">
+        <joint name="lfsj" range="-3.49 1.40"/>
+        <geom name="lfs" type="box" pos="0 0 -0.0233" size="0.0035 0.006 0.0233" mass="0.020" contype="0" conaffinity="0"/>
+        <body name="lfk" pos="0.0075 0 -0.0466">
+          <joint name="lfkj" range="-1.40 3.49"/>
+          <geom name="lfk" type="capsule" fromto="0 0 0 0 0.0515 0" size="0.005" mass="0.006"/>
+        </body>
+      </body>
+
+      <body name="rfs" pos="0.0485 0.0505 0">
+        <joint name="rfsj" range="-3.49 1.40"/>
+        <geom name="rfs" type="box" pos="0 0 -0.0233" size="0.0035 0.006 0.0233" mass="0.020" contype="0" conaffinity="0"/>
+        <body name="rfk" pos="-0.0075 0 -0.0466">
+          <joint name="rfkj" range="-1.40 3.49"/>
+          <geom name="rfk" type="capsule" fromto="0 0 0 0 0.0515 0" size="0.005" mass="0.006"/>
+        </body>
+      </body>
+
+      <body name="lbs" pos="-0.0485 -0.0505 0">
+        <joint name="lbsj" range="-1.40 3.49"/>
+        <geom name="lbs" type="box" pos="0 0 -0.0233" size="0.0035 0.006 0.0233" mass="0.020" contype="0" conaffinity="0"/>
+        <body name="lbk" pos="0.0075 0 -0.0466">
+          <joint name="lbkj" range="-1.40 3.49"/>
+          <geom name="lbk" type="capsule" fromto="0 0 0 0 0.0515 0" size="0.005" mass="0.006"/>
+        </body>
+      </body>
+
+      <body name="rbs" pos="0.0485 -0.0505 0">
+        <joint name="rbsj" range="-1.40 3.49"/>
+        <geom name="rbs" type="box" pos="0 0 -0.0233" size="0.0035 0.006 0.0233" mass="0.020" contype="0" conaffinity="0"/>
+        <body name="rbk" pos="-0.0075 0 -0.0466">
+          <joint name="rbkj" range="-1.40 3.49"/>
+          <geom name="rbk" type="capsule" fromto="0 0 0 0 0.0515 0" size="0.005" mass="0.006"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="lfs" joint="lfsj"/>
+    <position name="lfk" joint="lfkj"/>
+    <position name="rfs" joint="rfsj"/>
+    <position name="rfk" joint="rfkj"/>
+    <position name="lbs" joint="lbsj"/>
+    <position name="lbk" joint="lbkj"/>
+    <position name="rbs" joint="rbsj"/>
+    <position name="rbk" joint="rbkj"/>
+  </actuator>
+
+  <sensor>
+    <framequat name="imu_quat" objtype="site" objname="imu"/>
+    <gyro name="imu_gyro" site="imu"/>
+    <accelerometer name="imu_acc" site="imu"/>
+    <jointpos name="q_lfs" joint="lfsj"/>
+    <jointpos name="q_lfk" joint="lfkj"/>
+    <jointpos name="q_rfs" joint="rfsj"/>
+    <jointpos name="q_rfk" joint="rfkj"/>
+    <jointpos name="q_lbs" joint="lbsj"/>
+    <jointpos name="q_lbk" joint="lbkj"/>
+    <jointpos name="q_rbs" joint="rbsj"/>
+    <jointpos name="q_rbk" joint="rbkj"/>
+  </sensor>
+
+  <!-- firmware postures (deg): calib 0/0, balance 30/30, rest 75/-55. joint order: lfs lfk rfs rfk lbs lbk rbs rbk -->
+  <keyframe>
+    <key name="calib"   qpos="0 0 0.0536 1 0 0 0   0 0 0 0 0 0 0 0"/>
+    <key name="balance" qpos="0 0 0.09   1 0 0 0   0.5236 0.5236 0.5236 0.5236 0.5236 0.5236 0.5236 0.5236"/>
+    <key name="rest"    qpos="0 0 0.05   1 0 0 0   1.309 -0.9599 1.309 -0.9599 1.309 -0.9599 1.309 -0.9599"/>
+  </keyframe>
+</mujoco>

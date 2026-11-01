@@ -27,3 +27,10 @@ serialMaster/logfile.log
 .cursor/*
 /PythonRobotCourse
 .claude/
+
+# local photos of the robot for Physical AI modelling
+physicalAI/photos/
+physicalAI/sim/videos/
+physicalAI/videos/
+physicalAI/**/__pycache__/
+physicalAI/report/
